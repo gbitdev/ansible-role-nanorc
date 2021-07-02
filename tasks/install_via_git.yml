@@ -1,0 +1,17 @@
+---
+- name: Install nanorc files in system wide path
+  become: yes
+  git: 
+    repo: "{{ base_url }}.git"
+    dest: "{{ system_wide_path }}"
+    depth: 1
+    version: "{{ repo_version }}"
+  when: system_wide 
+
+- name: Install nanorc files for single user only
+  git: 
+    repo: "{{ base_url }}.git"
+    dest: "{{ installation_path }}"
+    depth: 1
+    version: "{{ repo_version }}"
+  when: not system_wide
