@@ -7,12 +7,12 @@
 - name: Unarchive to system wide path
   become: yes
   unarchive:
-    src: "/tmp/nanorc_{{ repo_version }}.zip"
+    remote_src: "/tmp/nanorc_{{ repo_version }}.zip"
     dest: "{{ system_wide_path }}"
   when: system_wide 
 
 - name: Unarchive for single user
   unarchive:
-    src: "/tmp/nanorc_{{ repo_version }}.zip"
+    remote_src: "/tmp/nanorc_{{ repo_version }}.zip"
     dest: "{{ installation_path }}"
   when: not system_wide

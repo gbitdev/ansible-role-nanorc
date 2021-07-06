@@ -4,14 +4,14 @@
   git: 
     repo: "{{ base_url }}.git"
     dest: "{{ system_wide_path }}"
-    depth: 1
+    # depth: 1 #Doesn't work cose of shitty implementation of built-in git task
     version: "{{ repo_version }}"
-  when: system_wide 
+  when: system_wide
 
 - name: Install nanorc files for single user only
   git: 
     repo: "{{ base_url }}.git"
     dest: "{{ installation_path }}"
-    depth: 1
+    # depth: 1 #Doesn't work cose of shitty implementation of built-in git task
     version: "{{ repo_version }}"
   when: not system_wide

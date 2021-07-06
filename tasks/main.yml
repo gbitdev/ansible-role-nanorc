@@ -1,4 +1,18 @@
 ---
+- name: Set HOME var
+  set_fact:
+    home_dir: "{{ ansible_env.HOME }}"
+
+# - name: Set XDG_CONFIG_HOME var
+#   set_fact:
+#     xdg_config_dir: "{{ ansible_env.XDG_CONFIG_HOME }}"
+#   when: ansible_env.XDG_CONFIG_HOME | bool
+
+- name: Show Vars
+  debug:
+    msg: "{{ system_wide }}"
+  tags: [never, debug]
+
 - name: Check if git is installed
   shell: command -v git >/dev/null 2>&1
   register: is_git_exist
@@ -32,7 +46,7 @@
 
 - name: Set repo version to 2.9
   set_fact:
-    repo_version: "2.9"
+    repo_version: "v2.9"
   when: nano_version.stdout | float <= 2.9
 
 - name: Set repo version to master
@@ -41,41 +55,74 @@
   when: nano_version.stdout | float > 2.9
 
 - name: Check if XDG Directories are in use
-  command: test -f $HOME/.nano || test -f $HOME/.nanorc
-  register: no_xdg
+  # command: test -d {{ xdg_config_dir }}
+  command: test -d {{ home }}/.config
+  register: xdg
   ignore_errors: yes
   when: not system_wide 
 
 - name: Set single user installation path to XDG based
   set_fact:
-    installation_path: $XDG_CONFIG_HOME/nano/_nanorc/
-    nano_rc_file: $XDG_CONFIG_HOME/nanorc
-  when: not no_xdg | bool
+    # installation_path: "{{ xdg_config_dir }}/nano/_nanorc/"
+    # nano_rc_file: "{{ xdg_config_dir }}/nanorc"
+    installation_path: "{{ home }}/.config/nano/_nanorc/"
+    nano_rc_file: "{{ home }}/.config/nanorc"
+  when: not system_wide and xdg
 
 - name: Set single user installation path to legacy
   set_fact:
-    installation_path: $HOME/.nano/
-    nano_rc_file: $HOME/.nanorc
-  when: no_xdg | bool
+    installation_path: "{{ home_dir }}/.nano/"
+    nano_rc_file: "{{ home_dir }}/.nanorc"
+  when: not system_wide and not xdg
 
 # - name: Proceed with git
 #   debug:
 #     msg: echo Proceed with git
-#   when: is_git_exist is not failed and strategy == 'git'
+#   when: is_git_exist is not failed and strat == 'git'
 
 - name: Proceed with git
   include_tasks: install_via_git.yml
+  when: is_git_exist is not failed and strat == 'git'
+
+# - name: Proceed with unzip
+#   debug:
+#     msg: echo Proceed with unzip
+#   when: is_unzip_exist is not failed and strat == 'zip'
 
 - name: Proceed with unzip
-  debug:
-    msg: echo Proceed with unzip
-  when: is_unzip_exist is not failed and strategy == 'zip'
+  include_tasks: install_via_unzip.yml
+  when: is_unzip_exist is not failed and strat == 'zip'
 
-- name: Enable installed files
+- name: Create nanorc file if not exists
   become: yes
-  command: echo "include {{ system_wide_path }}/*.nanorc" >> /etc/nanorc
-  when: system_wide
+  file:
+    path: /etc/nanorc
+    state: touch
+  when: system_wide | bool
+
+- name: Enable installed files system wide
+  become: yes
+  lineinfile:
+    path: /etc/nanorc
+    state: present
+    line: "include {{ system_wide_path }}/*.nanorc"
+  when: system_wide | bool
+
+
+# - name: Enable installed files
+#   command: echo "include {{ installation_path }}/*.nanorc" >> {{ nano_rc_file }}
+#   when: not system_wide
+#   # changed_when: grep -q "include {{ installation_path }}/*.nanorc" {{ nano_rc_file }}
+
+- name: Create nanorc file if not exists
+  file:
+    path: "{{ nano_rc_file }}"
+    state: touch
+  when: not system_wide
 
 - name: Enable installed files
-  command: echo "include {{ installation_path }}/*.nanorc" >> {{ nano_rc_file }}
+  lineinfile:
+    path: "{{ nano_rc_file }}"
+    state: present
+    line: "include {{ installation_path }}/*.nanorc"
   when: not system_wide
