@@ -1,7 +1,8 @@
 ---
 - name: Set HOME var
   set_fact:
-    home_dir: "{{ ansible_env.HOME }}"
+    # home_dir: "{{ ansible_env.HOME }}"
+    home_dir: "~"
 
 # - name: Set XDG_CONFIG_HOME var
 #   set_fact:
@@ -75,19 +76,9 @@
     nano_rc_file: "{{ home_dir }}/.nanorc"
   when: not system_wide and not xdg
 
-# - name: Proceed with git
-#   debug:
-#     msg: echo Proceed with git
-#   when: is_git_exist is not failed and strat == 'git'
-
 - name: Proceed with git
   include_tasks: install_via_git.yml
   when: is_git_exist is not failed and strat == 'git'
-
-# - name: Proceed with unzip
-#   debug:
-#     msg: echo Proceed with unzip
-#   when: is_unzip_exist is not failed and strat == 'zip'
 
 - name: Proceed with unzip
   include_tasks: install_via_unzip.yml
