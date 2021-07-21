@@ -3,3 +3,4 @@ base_url: https://github.com/scopatz/nanorc
 zip_path: archive/refs/heads
 system_wide_path: /usr/share/nano-syntax-highlighting
 strat: git
+system_wide: false
